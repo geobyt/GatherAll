@@ -3,7 +3,6 @@ package com.vault687.gatherall;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,9 +10,6 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.parse.Parse;
-import com.parse.ParseException;
-import com.parse.ParsePush;
-import com.parse.SaveCallback;
 
 
 public class MainActivity extends Activity {
@@ -45,17 +41,6 @@ public class MainActivity extends Activity {
             {
                 // Starts an intent for the sign up activity
                 startActivity(new Intent(MainActivity.this, SignUpActivity.class));
-            }
-        });
-
-        ParsePush.subscribeInBackground("", new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e == null) {
-                    Log.d("com.parse.push", "successfully subscribed to the broadcast channel.");
-                } else {
-                    Log.e("com.parse.push", "failed to subscribe for push", e);
-                }
             }
         });
     }
