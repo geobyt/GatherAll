@@ -8,8 +8,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.parse.Parse;
+import com.parse.ParseUser;
 
 
 public class MainActivity extends Activity {
@@ -43,12 +45,34 @@ public class MainActivity extends Activity {
                 startActivity(new Intent(MainActivity.this, SignUpActivity.class));
             }
         });
+
+        TextView slogan = (TextView) findViewById(R.id.textview_3);
+
+        if (ParseUser.getCurrentUser() != null)
+        {
+            loginButton.setVisibility(View.INVISIBLE);
+            signupButton.setVisibility(View.INVISIBLE);
+            slogan.setText(getResources().getString(R.string.slogan, ParseUser.getCurrentUser().getUsername()));
+        }
+        else
+        {
+            slogan.setText(getResources().getString(R.string.slogan, "y'all"));
+            loginButton.setVisibility(View.VISIBLE);
+            signupButton.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        if (ParseUser.getCurrentUser() != null)
+        {
+            getMenuInflater().inflate(R.menu.menu_main_logout, menu);
+        }
+        else
+        {
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+        }
+
         return true;
     }
 
@@ -60,8 +84,16 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_settings)
+        {
             return true;
+        }
+        else
+        if (id == R.id.action_logout)
+        {
+            ParseUser.logOut();
+            finish();
+            startActivity(getIntent());
         }
 
         return super.onOptionsItemSelected(item);

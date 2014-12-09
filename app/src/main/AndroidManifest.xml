@@ -38,10 +38,6 @@
             android:name="com.vault687.gatherall.LoginActivity"
             android:label="@string/title_activity_login" >
         </activity>
-        <activity
-            android:name="com.vault687.gatherall.DispatchActivity"
-            android:label="@string/title_activity_dispatch" >
-        </activity>
 
         <service android:name="com.parse.PushService" />
         <receiver android:name="com.parse.ParseBroadcastReceiver">

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,7 +16,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.ParseException;
+import com.parse.ParseInstallation;
+import com.parse.ParsePush;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 import com.parse.SignUpCallback;
 
 
@@ -123,20 +127,43 @@ public class SignUpActivity extends Activity {
             @Override
             public void done(ParseException e)
             {
-                dialog.dismiss();
+            dialog.dismiss();
 
-                if (e != null)
+            if (e != null)
+            {
+                // Show the error message
+                Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+            else
+            {
+                // Check if there is current user info
+                if (ParseUser.getCurrentUser() != null)
                 {
-                    // Show the error message
-                    Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+
+                    if (installation.get("user") == null)
+                    {
+                        installation.put("user", ParseUser.getCurrentUser());
+                        installation.saveInBackground();
+
+                        ParsePush.subscribeInBackground("", new SaveCallback() {
+                            @Override
+                            public void done(ParseException e) {
+                                if (e == null) {
+                                    Log.d("com.parse.push", "successfully subscribed to the broadcast channel.");
+                                } else {
+                                    Log.e("com.parse.push", "failed to subscribe for push", e);
+                                }
+                            }
+                        });
+                    }
                 }
-                else
-                {
-                    // Start an intent for the dispatch activity
-                    Intent intent = new Intent(SignUpActivity.this, DispatchActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
+
+                // Start an intent for the logged in activity
+                Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
             }
         });
     }
