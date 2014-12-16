@@ -1,16 +1,23 @@
 package com.vault687.gatherall;
 
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.parse.Parse;
+import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 
@@ -24,41 +31,34 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        // Log in button click handler
-        Button loginButton = (Button) findViewById(R.id.login_button);
-        loginButton.setOnClickListener(new OnClickListener()
-        {
-            public void onClick(View v)
-            {
-                // Starts an intent of the log in activity
-                startActivity(new Intent(MainActivity.this, LoginActivity.class));
-            }
-        });
-
-        // Sign up button click handler
-        Button signupButton = (Button) findViewById(R.id.signup_button);
-        signupButton.setOnClickListener(new OnClickListener()
-        {
-            public void onClick(View v)
-            {
-                // Starts an intent for the sign up activity
-                startActivity(new Intent(MainActivity.this, SignUpActivity.class));
-            }
-        });
-
         TextView slogan = (TextView) findViewById(R.id.textview_3);
+
+        FragmentManager fm = getFragmentManager();
+        Fragment loginFragment = fm.findFragmentById(R.id.loginFragment);
+        Fragment newGatherFragment = fm.findFragmentById(R.id.createGatherFragment);
 
         if (ParseUser.getCurrentUser() != null)
         {
-            loginButton.setVisibility(View.INVISIBLE);
-            signupButton.setVisibility(View.INVISIBLE);
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+
+            ft.hide(loginFragment);
+            ft.show(newGatherFragment);
+            ft.commit();
+
             slogan.setText(getResources().getString(R.string.slogan, ParseUser.getCurrentUser().getUsername()));
         }
         else
         {
             slogan.setText(getResources().getString(R.string.slogan, "y'all"));
-            loginButton.setVisibility(View.VISIBLE);
-            signupButton.setVisibility(View.VISIBLE);
+
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+
+            ft.show(loginFragment);
+            ft.hide(newGatherFragment);
+            ft.commit();
+
         }
     }
 
@@ -92,10 +92,86 @@ public class MainActivity extends Activity {
         if (id == R.id.action_logout)
         {
             ParseUser.logOut();
-            finish();
-            startActivity(getIntent());
+
+            FragmentManager fm = getFragmentManager();
+            Fragment loginFragment = fm.findFragmentById(R.id.loginFragment);
+            Fragment newGatherFragment = fm.findFragmentById(R.id.createGatherFragment);
+
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+
+            ft.show(loginFragment);
+            ft.hide(newGatherFragment);
+            ft.commit();
+
+            this.invalidateOptionsMenu();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void CreateGathering(String gatheringName)
+    {
+        ParseObject newGathering = new ParseObject("Gathering");
+        newGathering.put("name", gatheringName);
+        newGathering.put("owner", ParseUser.getCurrentUser());
+        newGathering.saveInBackground();
+    }
+
+    public static class MainActivityLoginFragment extends Fragment
+    {
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View v = inflater.inflate(R.layout.main_activity_login_fragment, container, false);
+
+            // Log in button click handler
+            Button loginButton = (Button) v.findViewById(R.id.login_button);
+            loginButton.setOnClickListener(new OnClickListener()
+            {
+                public void onClick(View v)
+                {
+                    // Starts an intent of the log in activity
+                    startActivity(new Intent(getActivity(), LoginActivity.class));
+                }
+            });
+
+            // Sign up button click handler
+            Button signupButton = (Button) v.findViewById(R.id.signup_button);
+            signupButton.setOnClickListener(new OnClickListener()
+            {
+                public void onClick(View v)
+                {
+                    // Starts an intent for the sign up activity
+                    startActivity(new Intent(getActivity(), SignUpActivity.class));
+                }
+            });
+
+            return v;
+        }
+    }
+
+    public static class MainActivityCreateGatherFragment extends Fragment
+    {
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View v = inflater.inflate(R.layout.main_activity_newgather_fragment, container, false);
+
+            // gather button click handler
+            Button gatherButton = (Button) v.findViewById(R.id.create_gather_button);
+            final EditText gatheringName = (EditText) v.findViewById(R.id.gathering_name_text);
+
+            gatherButton.setOnClickListener(new OnClickListener()
+            {
+                public void onClick(View v)
+                {
+                    //create a gathering and hide the fragment
+                    ((MainActivity) getActivity()).CreateGathering(gatheringName.getText().toString());
+                }
+            });
+
+            return v;
+        }
     }
 }
