@@ -3,7 +3,14 @@ package com.vault687.gatherall;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -23,49 +30,59 @@ import com.parse.SaveCallback;
 import com.parse.SignUpCallback;
 
 
-public class SignUpActivity extends Activity {
+public class SignUpActivity
+        extends FragmentActivity
+        implements SignUpUsernameFragment.OnFragmentInteractionListener {
 
     // UI references.
-    private EditText usernameEditText;
+/*    private EditText usernameEditText;
     private EditText passwordEditText;
-    private EditText passwordAgainEditText;
+    private EditText passwordAgainEditText;*/
+
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_sign_up);
-
-        // Set up the signup form.
-        usernameEditText = (EditText) findViewById(R.id.username_edit_text);
-
-        passwordEditText = (EditText) findViewById(R.id.password_edit_text);
-        passwordAgainEditText = (EditText) findViewById(R.id.password_again_edit_text);
-        passwordAgainEditText.setOnEditorActionListener(new TextView.OnEditorActionListener()
-        {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
-            {
-                if (actionId == R.id.edittext_action_signup || actionId == EditorInfo.IME_ACTION_UNSPECIFIED)
-                {
-                    signup();
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        // Set up the submit button click handler
-        Button mActionButton = (Button) findViewById(R.id.action_button);
-        mActionButton.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View view)
-            {
-                signup();
-            }
-        });
+        this.viewPager = (ViewPager)this.findViewById(R.id.pager);
+        this.viewPager.setAdapter(new SignUpFragmentManager(getSupportFragmentManager()));
     }
 
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    private class SignUpFragmentManager extends FragmentPagerAdapter {
+
+        public SignUpFragmentManager(FragmentManager mgr) {
+            super(mgr);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            switch(position) {
+                case 0:
+                    return SignUpUsernameFragment.newInstance();
+
+                case 1:
+                    break;
+
+                default:
+                    return SignUpUsernameFragment.newInstance();
+            }
+
+            return null;
+        }
+
+        @Override
+        public int getCount() {
+            return 1;
+        }
+    }
+/*
     private void signup() {
         String username = usernameEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
@@ -191,5 +208,5 @@ public class SignUpActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
-    }
+    }*/
 }

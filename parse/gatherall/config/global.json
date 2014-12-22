@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "GatherAll": {
+            "applicationId": "k5ifInLOxxJevkIyG1pK0AIcDBaRUtaKmFz7eS4P", 
+            "masterKey": "9oBk9jfeP7v2M3DeWmEHnfNtCpSBFwoYsyOOTyX8"
+        }, 
+        "_default": {
+            "link": "GatherAll"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.3.2"
+    }
+}
