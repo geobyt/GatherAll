@@ -1,45 +1,31 @@
 package com.vault687.gatherall;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 
+import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParsePush;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-import com.parse.SignUpCallback;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class SignUpActivity
         extends FragmentActivity
-        implements SignUpUsernameFragment.OnFragmentInteractionListener {
-
-    // UI references.
-/*    private EditText usernameEditText;
-    private EditText passwordEditText;
-    private EditText passwordAgainEditText;*/
+        implements OnSignUpFragmentListener {
 
     private ViewPager viewPager;
+    private SignUpFragmentManager fragmentManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,39 +33,72 @@ public class SignUpActivity
 
         setContentView(R.layout.activity_sign_up);
         this.viewPager = (ViewPager)this.findViewById(R.id.pager);
-        this.viewPager.setAdapter(new SignUpFragmentManager(getSupportFragmentManager()));
+        this.fragmentManager = new SignUpFragmentManager(getSupportFragmentManager());
+        this.viewPager.setAdapter(this.fragmentManager);
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
+    public void onUsernameAndPhoneEntered(String username, String phone) {
+        ((VerifyPinCodeFragment)this.fragmentManager.getItem(1)).setUsername(username);
+        this.viewPager.setCurrentItem(1);
+    }
 
+    @Override
+    public void onPasswordObtained(String username, String password) {
+        ParseUser.logInInBackground(username, password, new LogInCallback() {
+            @Override
+            public void done(ParseUser parseUser, ParseException e) {
+                if (e == null) {
+                    // Check if there is current user info
+                    if (ParseUser.getCurrentUser() != null) {
+                        ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+
+                        if (installation.get("user") == null) {
+                            installation.put("user", ParseUser.getCurrentUser());
+                            installation.saveInBackground();
+                        }
+
+                        ParsePush.subscribeInBackground("", new SaveCallback() {
+                            @Override
+                            public void done(ParseException e) {
+                                if (e == null) {
+                                    Log.d("com.parse.push", "successfully subscribed to the broadcast channel.");
+                                } else {
+                                    Log.e("com.parse.push", "failed to subscribe for push", e);
+                                }
+                            }
+                        });
+                    }
+
+                    // Start an intent for the logged in activity
+                    Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } else {
+                    // DISPLAY ERROR AND RETRY
+                }
+            }
+        });
     }
 
     private class SignUpFragmentManager extends FragmentPagerAdapter {
 
+        private List<Fragment> fragments = new ArrayList<Fragment>();
+
         public SignUpFragmentManager(FragmentManager mgr) {
             super(mgr);
+            this.fragments.add((Fragment)SignUpUsernameFragment.newInstance());
+            this.fragments.add((Fragment)VerifyPinCodeFragment.newInstance());
         }
 
         @Override
         public Fragment getItem(int position) {
-            switch(position) {
-                case 0:
-                    return SignUpUsernameFragment.newInstance();
-
-                case 1:
-                    break;
-
-                default:
-                    return SignUpUsernameFragment.newInstance();
-            }
-
-            return null;
+            return this.fragments.get(position);
         }
 
         @Override
         public int getCount() {
-            return 1;
+            return 2;
         }
     }
 /*

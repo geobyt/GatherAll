@@ -32,5 +32,6 @@
     <string name="progress_login">Logging you in…</string>
     <string name="progress_signup">Signing you up…</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="prompt_pincode">Enter the pin code</string>
 
 </resources>
