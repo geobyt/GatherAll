@@ -41,12 +41,12 @@ Parse.Cloud.define("inviteWithSMS", function(request, response) {
 });
 
 Parse.Cloud.define("verifyWithCode", function(request, response) {
+	Parse.Cloud.useMasterKey();
+
 	var pinCode = request.params.pinCode;
 	var username = request.params.username;
 
 	var password = generatePassword(128);
-
-	console.log("password: " + password);
 
 	var Verification = Parse.Object.extend("Verification");
 	var query = new Parse.Query(Verification);
@@ -57,10 +57,31 @@ Parse.Cloud.define("verifyWithCode", function(request, response) {
 		if (verification != null) {
 			console.log("Pin code verification success");
 			
-			Parse.User.signUp(username, password, {"phone": verification.get("phone")}).then(function() {
+			var userQuery = new Parse.Query(Parse.User);
+			userQuery.equalTo("phone", verification.get("phone"))
+
+			userQuery.first().then(function(user) {
+				console.log("userQuery results...");
+				console.log(user);
+				if (user == null) {
+					// If user is new, sign up
+					console.log("signing up");
+					return Parse.User.signUp(username, password, {"phone": verification.get("phone")});
+				} else {
+					// If user exists, simply update the username and password
+					console.log("updating");
+					user.set("username", username);
+					user.set("password", password);
+					return user.save();
+				}
+			}).then(function() {
+				console.log("destroying verification");
 				return verification.destroy();	
 			}).then(function() {
+				console.log("sign up / update success");
 				return response.success(password);		
+			}).fail(function(err) {
+				return response.error(err);
 			});
 
 		} else {

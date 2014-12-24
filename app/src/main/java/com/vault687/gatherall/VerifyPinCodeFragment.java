@@ -20,7 +20,9 @@ import java.util.HashMap;
  */
 public class VerifyPinCodeFragment extends Fragment {
     private HashMap<String, String> params = new HashMap<String, String>();
+
     private String username;
+
     private OnSignUpFragmentListener mListener;
 
     public VerifyPinCodeFragment() {

@@ -125,17 +125,6 @@ public class MainActivity extends Activity {
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.main_activity_login_fragment, container, false);
 
-            // Log in button click handler
-            Button loginButton = (Button) v.findViewById(R.id.login_button);
-            loginButton.setOnClickListener(new OnClickListener()
-            {
-                public void onClick(View v)
-                {
-                    // Starts an intent of the log in activity
-                    startActivity(new Intent(getActivity(), LoginActivity.class));
-                }
-            });
-
             // Sign up button click handler
             Button signupButton = (Button) v.findViewById(R.id.signup_button);
             signupButton.setOnClickListener(new OnClickListener()
