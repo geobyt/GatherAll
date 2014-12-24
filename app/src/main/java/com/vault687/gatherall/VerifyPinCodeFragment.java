@@ -85,8 +85,6 @@ public class VerifyPinCodeFragment extends Fragment {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-
-
     }
 
     @Override
