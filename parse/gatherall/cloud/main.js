@@ -100,8 +100,14 @@ Parse.Cloud.beforeSave("Invitation", function(request, response) {
 	query.equalTo("phone", invitation.get('phone'));
 
 	query.first().then(function(user) {
-		invitation.set("user", user);
-		invitation.set("profilepic", user.get('profilepic'));
+		if (user != null) {
+			invitation.set("user", user);
+
+			if (user.get('profilepic') != null) {
+				invitation.set("profilepic", user.get('profilepic'));
+			}
+		}
+
 		response.success();
 	});
 });
@@ -109,21 +115,37 @@ Parse.Cloud.beforeSave("Invitation", function(request, response) {
 Parse.Cloud.afterSave("Invitation", function(request) {
 	var invitation = request.object;
 
-	request.object.get("user").fetch().then(function(user) {
+	if (request.object.get("user") != null) {
+		// This is an invitation for someone who has this app installed
+		request.object.get("user").fetch().then(function(user) {
+			request.object.get("gathering").fetch().then(function(gathering) {
+				return gathering.get("owner").fetch();
+			}).then(function(owner) {
+				var installationQuery = new Parse.Query(Parse.Installation);
+				installationQuery.equalTo("user", user);
+				
+				console.log("Sending to " + user.get("username") + " msg: " + owner.get("username") + " invited you to a gathering");
+
+				Parse.Push.send({
+					where: installationQuery,
+					data: {
+						alert: owner.get('username') + " invited you to a gathering"
+					}
+				});
+			});		
+		});
+	} else {
 		request.object.get("gathering").fetch().then(function(gathering) {
 			return gathering.get("owner").fetch();
 		}).then(function(owner) {
-			var installationQuery = new Parse.Query(Parse.Installation);
-			installationQuery.equalTo("user", user);
-			
-			console.log("Sending to " + user.get("username") + " msg: " + owner.get("username") + " invited you to a gathering");
-			Parse.Push.send({
-				where: installationQuery,
-				data: {
-					alert: owner.get('username') + " invited you to a gathering"
-				}
+			twilio.sendSMS({
+				From: "+1 802-750-0288",
+				To: invitation.get("phone"),
+				Body: owner.get('username') + " invited you to a gathering"
+			}, {
+				success: function(httpResponse) { console.log("SUCCESSFULLY SENT INVITATION") },
+				error: function(httpResponse) { console.log(httpResponse); }
 			});
 		});
-		
-	});
+	}
 });
