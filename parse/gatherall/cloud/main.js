@@ -14,31 +14,47 @@ var generatePassword = function(length) {
 
 // Sign up API
 Parse.Cloud.define("inviteWithSMS", function(request, response) {
-	var pinCodeNumber = Math.floor(Math.random() * 10000);
-	var pinCode = ('0000' + pinCodeNumber).slice(-4);
+	checkUserExists(request.params.username).then(function(user) {
+		if (user != null) {
+			response.error("username already taken");
+			return;
+		}
 
-	var verification = new Parse.Object("Verification");
+		var pinCodeNumber = Math.floor(Math.random() * 10000);
+		var pinCode = ('0000' + pinCodeNumber).slice(-4);
 
-	verification.set("username", request.params.username);
-	verification.set("pinCode", pinCode);
-	verification.set("phone", request.params.phone);
+		var verification = new Parse.Object("Verification");
 
-	verification.save().then(function(results) {
-		console.log("verification saved");
+		verification.set("username", request.params.username);
+		verification.set("pinCode", pinCode);
+		verification.set("phone", request.params.phone);
 
-		// Use the Twilio Cloud Module to send an SMS
-		twilio.sendSMS({
-			From: "+1 802-750-0288",
-			To: request.params.phone,
-			Body: "Sign Up Pin: " + pinCode + " at GatherAll App"
-		}, {
-			success: function(httpResponse) { response.success("SMS sent!"); },
-			error: function(httpResponse) { console.log(httpResponse); response.error("Uh oh, something went wrong"); }
+		verification.save().then(function(results) {
+			console.log("verification saved");
+
+			// Use the Twilio Cloud Module to send an SMS
+			twilio.sendSMS({
+				From: "+1 802-750-0288",
+				To: request.params.phone,
+				Body: "Sign Up Pin: " + pinCode + " at GatherAll App"
+			}, {
+				success: function(httpResponse) { response.success("SMS sent!"); },
+				error: function(httpResponse) { console.log(httpResponse); response.error("Uh oh, something went wrong"); }
+			});
+		}, function(error) {
+			response.error(error);
 		});
-	}, function(error) {
-		response.error(error);
-	})
+	});
+
 });
+
+function checkUserExists(username) {
+	var userQuery = new Parse.Query(Parse.User);
+	userQuery.equalTo("username", username);
+
+	return userQuery.first();
+}
+
 
 Parse.Cloud.define("verifyWithCode", function(request, response) {
 	Parse.Cloud.useMasterKey();
